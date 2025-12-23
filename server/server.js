@@ -18,6 +18,8 @@ const PORT = process.env.PORT || 3000;
 
 const fs = require("fs").promises;
 const path = require("path");
+const bcrypt = require("bcryptjs");
+const { v4: uuidv4 } = require("uuid");
 
 // Serve frontend files from project root so /login, /home and /chat work remotely
 const publicDir = path.join(__dirname, "..");
@@ -39,6 +41,43 @@ const DATA_DIR = path.join(__dirname, "data");
 const DATA_FILE = path.join(DATA_DIR, "messages.json");
 const MESSAGE_TTL = 24 * 60 * 60 * 1000; // 24h
 let rooms = {}; // { roomName: [ {id, user, text, ts} ] }
+
+// Simple users persistence (loaded from server/data/users.json)
+let users = []; // { id, name, email, sector, passwordHash, admin, token }
+const USERS_FILE = path.join(DATA_DIR, "users.json");
+
+async function loadUsersFromFile() {
+  try {
+    await fs.mkdir(DATA_DIR, { recursive: true });
+    const content = await fs.readFile(USERS_FILE, "utf8");
+    users = JSON.parse(content || "[]");
+  } catch (err) {
+    if (err.code !== "ENOENT") console.error("Error loading users file:", err);
+  }
+}
+
+async function saveUsersToFile() {
+  try {
+    await fs.mkdir(DATA_DIR, { recursive: true });
+    await fs.writeFile(USERS_FILE, JSON.stringify(users, null, 2), "utf8");
+  } catch (err) {
+    console.error("Error saving users file:", err);
+  }
+}
+
+// Load persisted users at startup
+loadUsersFromFile().catch((err) => console.error(err));
+
+function authMiddleware(req, res, next) {
+  const auth = req.headers["authorization"] || "";
+  const m = auth.match(/^Bearer (.+)$/);
+  if (!m) return res.status(401).json({ ok: false, msg: "missing token" });
+  const token = m[1];
+  const user = users.find((u) => u.token === token);
+  if (!user) return res.status(401).json({ ok: false, msg: "invalid token" });
+  req.user = { ...user };
+  next();
+}
 
 // Basic sanitizer (removes HTML tags, trims)
 function sanitizeText(str) {
@@ -155,6 +194,62 @@ io.on("connection", (socket) => {
   socket.on("disconnect", () => {
     rateMap.delete(socket.id);
   });
+});
+
+// User API: register, login, list users
+app.post("/api/register", async (req, res) => {
+  const { name, email, sector, password, admin } = req.body || {};
+  if (!name || !email || !sector || !password)
+    return res.status(400).json({ ok: false, msg: "missing fields" });
+  if (users.some((u) => u.email === email))
+    return res.status(400).json({ ok: false, msg: "user exists" });
+
+  const id = uuidv4();
+  const passwordHash = bcrypt.hashSync(password, 10);
+  const token = uuidv4();
+  const user = { id, name, email, sector, passwordHash, admin: !!admin, token };
+  users.push(user);
+  await saveUsersToFile();
+  return res.json({
+    ok: true,
+    user: { id, name, email, sector, admin: !!admin },
+    token,
+  });
+});
+
+app.post("/api/login", async (req, res) => {
+  const { email, password } = req.body || {};
+  if (!email || !password)
+    return res.status(400).json({ ok: false, msg: "missing fields" });
+  const user = users.find((u) => u.email === email);
+  if (!user)
+    return res.status(400).json({ ok: false, msg: "invalid credentials" });
+  if (!bcrypt.compareSync(password, user.passwordHash))
+    return res.status(400).json({ ok: false, msg: "invalid credentials" });
+  user.token = uuidv4();
+  await saveUsersToFile();
+  return res.json({
+    ok: true,
+    user: {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      sector: user.sector,
+      admin: user.admin,
+    },
+    token: user.token,
+  });
+});
+
+app.get("/api/users", authMiddleware, (req, res) => {
+  const list = users.map((u) => ({
+    id: u.id,
+    name: u.name,
+    email: u.email,
+    sector: u.sector,
+    admin: u.admin,
+  }));
+  res.json(list);
 });
 
 // Simple REST endpoint to peek messages
