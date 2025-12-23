@@ -182,6 +182,13 @@ io.on("connection", (socket) => {
     if (user.id !== socket.user.id)
       return callback({ ok: false, msg: "invalid user" });
 
+    // Debug: show socket auth and requested room
+    console.log("join request debug", {
+      socketUserSector: socket.user.sector,
+      socketUserId: socket.user.id,
+      requestedRoom: room,
+    });
+
     // Determine room permission: sector rooms or DM rooms (dm:<id1>:<id2>)
     if (room.startsWith("dm:")) {
       const parts = room.split(":").slice(1);
@@ -200,12 +207,10 @@ io.on("connection", (socket) => {
     const msgs = rooms[room] || [];
     callback({ ok: true, messages: msgs });
 
-    socket
-      .to(room)
-      .emit("user-joined", {
-        user: socket.user.name || socket.user.email,
-        userId: socket.user.id,
-      });
+    socket.to(room).emit("user-joined", {
+      user: socket.user.name || socket.user.email,
+      userId: socket.user.id,
+    });
   });
 
   socket.on("message", (payload, callback) => {
@@ -258,12 +263,10 @@ io.on("connection", (socket) => {
 
   socket.on("leave", ({ room }) => {
     socket.leave(room);
-    socket
-      .to(room)
-      .emit("user-left", {
-        user: socket.user.name || socket.user.email,
-        userId: socket.user.id,
-      });
+    socket.to(room).emit("user-left", {
+      user: socket.user.name || socket.user.email,
+      userId: socket.user.id,
+    });
   });
 
   socket.on("disconnect", () => {
