@@ -131,32 +131,101 @@ setInterval(cleanupOldMessages, 60 * 60 * 1000); // hourly
 // Simple rate limiting per socket (timestamps)
 const rateMap = new Map();
 
+// In-memory presence maps
+const onlineUsers = new Map(); // userId -> Set(socketId)
+const socketToUser = new Map(); // socketId -> userId
+
 io.on("connection", (socket) => {
   console.log("socket connected", socket.id);
+
+  // Authenticate socket by token sent in handshake (socket.io client should send { auth: { token } })
+  const token = socket.handshake.auth && socket.handshake.auth.token;
+  if (!token) {
+    socket.emit("error", "missing token");
+    socket.disconnect(true);
+    return;
+  }
+  const authUser = users.find((u) => u.token === token);
+  if (!authUser) {
+    socket.emit("error", "invalid token");
+    socket.disconnect(true);
+    return;
+  }
+
+  // Attach canonical user info to socket
+  socket.user = {
+    id: authUser.id,
+    name: authUser.name,
+    email: authUser.email,
+    sector: authUser.sector,
+    admin: authUser.admin,
+  };
+
+  // Mark presence
+  let set = onlineUsers.get(socket.user.id);
+  if (!set) {
+    set = new Set();
+    onlineUsers.set(socket.user.id, set);
+  }
+  set.add(socket.id);
+  socketToUser.set(socket.id, socket.user.id);
+
+  // Broadcast presence change and send current presence list to connecting socket
+  io.emit("presence", { userId: socket.user.id, online: true });
+  socket.emit("presence-list", Array.from(onlineUsers.keys()));
 
   socket.on("join", ({ room, user }, callback) => {
     if (!room || !user)
       return callback({ ok: false, msg: "room and user required" });
 
-    if (user.sector !== room && !user.admin)
-      return callback({ ok: false, msg: "not allowed" });
+    // Prevent impersonation: ensure payload user id matches authenticated socket user
+    if (user.id !== socket.user.id)
+      return callback({ ok: false, msg: "invalid user" });
+
+    // Determine room permission: sector rooms or DM rooms (dm:<id1>:<id2>)
+    if (room.startsWith("dm:")) {
+      const parts = room.split(":").slice(1);
+      if (parts.length !== 2)
+        return callback({ ok: false, msg: "invalid dm room" });
+      if (!parts.includes(socket.user.id) && !socket.user.admin)
+        return callback({ ok: false, msg: "not allowed" });
+    } else {
+      // sector room
+      if (socket.user.sector !== room && !socket.user.admin)
+        return callback({ ok: false, msg: "not allowed" });
+    }
 
     socket.join(room);
 
     const msgs = rooms[room] || [];
     callback({ ok: true, messages: msgs });
 
-    socket.to(room).emit("user-joined", { user: user.name || user.email });
+    socket
+      .to(room)
+      .emit("user-joined", {
+        user: socket.user.name || socket.user.email,
+        userId: socket.user.id,
+      });
   });
 
   socket.on("message", (payload, callback) => {
-    // payload: { room, user, text }
-    if (!payload || !payload.room || !payload.user || !payload.text)
+    // payload: { room, text }
+    if (!payload || !payload.room || !payload.text)
       return callback({ ok: false, msg: "invalid payload" });
 
-    // permission check
-    if (payload.user.sector !== payload.room && !payload.user.admin)
-      return callback({ ok: false, msg: "not allowed" });
+    const room = payload.room;
+
+    // Permission checks similar to join
+    if (room.startsWith("dm:")) {
+      const parts = room.split(":").slice(1);
+      if (parts.length !== 2)
+        return callback({ ok: false, msg: "invalid dm room" });
+      if (!parts.includes(socket.user.id) && !socket.user.admin)
+        return callback({ ok: false, msg: "not allowed" });
+    } else {
+      if (socket.user.sector !== room && !socket.user.admin)
+        return callback({ ok: false, msg: "not allowed" });
+    }
 
     // Rate limit: max 7 messages per 10s
     const now = Date.now();
@@ -168,31 +237,50 @@ io.on("connection", (socket) => {
     const msg = {
       id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
       user: {
-        name: payload.user.name,
-        email: payload.user.email,
-        admin: !!payload.user.admin,
+        id: socket.user.id,
+        name: socket.user.name,
+        email: socket.user.email,
+        admin: !!socket.user.admin,
       },
       text: sanitizeText(payload.text),
       ts: now,
     };
 
-    rooms[payload.room] = rooms[payload.room] || [];
-    rooms[payload.room].push(msg);
+    rooms[room] = rooms[room] || [];
+    rooms[room].push(msg);
 
     // Persist messages (async)
     saveMessagesToFile();
 
-    io.to(payload.room).emit("message", msg);
+    io.to(room).emit("message", msg);
     callback({ ok: true });
   });
 
-  socket.on("leave", ({ room, user }) => {
+  socket.on("leave", ({ room }) => {
     socket.leave(room);
-    socket.to(room).emit("user-left", { user: user.name || user.email });
+    socket
+      .to(room)
+      .emit("user-left", {
+        user: socket.user.name || socket.user.email,
+        userId: socket.user.id,
+      });
   });
 
   socket.on("disconnect", () => {
     rateMap.delete(socket.id);
+
+    const uid = socketToUser.get(socket.id);
+    if (uid) {
+      const s = onlineUsers.get(uid);
+      if (s) {
+        s.delete(socket.id);
+        if (s.size === 0) {
+          onlineUsers.delete(uid);
+          io.emit("presence", { userId: uid, online: false });
+        }
+      }
+      socketToUser.delete(socket.id);
+    }
   });
 });
 
