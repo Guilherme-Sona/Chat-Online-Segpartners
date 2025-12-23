@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login</title>
+
+    <link rel="stylesheet" href="../Tela de Login/login.css" />
+  </head>
+  <body>
+    <div class="container">
+      <form id="login-form">
+        <img src="../img/seg logo.png" alt="" width="100" height="100" />
+        <div>
+          <label for="email">Email:</label>
+          <input type="email" id="email" name="email" required />
+        </div>
+        <div>
+          <label for="password">Password:</label>
+          <input type="password" id="password" name="password" required />
+        </div>
+        <button type="button" onclick="login()">Login</button>
+        <a href="#" id="btnOpenRegister">Criar novo acesso</a>
+      </form>
+    </div>
+
+    <div id="registerModal" class="modal">
+      <div class="modal-content">
+        <h2>Criar novo acesso</h2>
+
+        <input id="regName" placeholder="Nome" />
+        <input id="regEmail" type="email" placeholder="E-mail" />
+        <label for="regSector">Setor</label>
+        <select id="regSector">
+          <option value="">Selecionar setor</option>
+          <option value="Vendas">Vendas</option>
+          <option value="Suporte">Suporte</option>
+          <option value="Financeiro">Financeiro</option>
+          <option value="TI">TI</option>
+          <option value="Outro">Outro</option>
+        </select>
+        <input id="regPassword" type="password" placeholder="Senha" />
+
+        <div class="modal-actions">
+          <button id="btnRegister" type="button">Registrar</button>
+          <button id="btnCloseModal" type="button">Cancelar</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="../Tela de Login/login.js"></script>
+    <script src="../script.js"></script>
+  </body>
+</html>
