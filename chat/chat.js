@@ -13,9 +13,21 @@
     window.location.href = "../Tela de Login/login.html";
   }
 
-  const room = loggedUser.sector;
-  roomTitle.innerText = `Sala: ${room}`;
-  userInfo.innerText = `${loggedUser.name} (${loggedUser.email})`;
+  const overrideRoom = localStorage.getItem("chatRoom");
+  const overrideTitle = localStorage.getItem("chatRoomTitle");
+  const chatWithRaw = localStorage.getItem("chatWithUser");
+  const chatWith = chatWithRaw ? JSON.parse(chatWithRaw) : null;
+
+  const room = overrideRoom || loggedUser.sector;
+  roomTitle.innerText = overrideTitle || `Sala: ${room}`;
+  userInfo.innerText = chatWith
+    ? `Você ↔ ${chatWith.name || chatWith.email}`
+    : `${loggedUser.name} (${loggedUser.email})`;
+
+  // Clear overrides so subsequent visits default back to sector
+  localStorage.removeItem("chatRoom");
+  localStorage.removeItem("chatRoomTitle");
+  localStorage.removeItem("chatWithUser");
 
   function addMessage(m) {
     const div = document.createElement("div");
