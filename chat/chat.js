@@ -1,7 +1,24 @@
 (function () {
   // Use same origin so the client can connect whether served locally or remotely
-  const socket = io();
+  // Send authentication token with handshake so server can validate and map presence
+  const token = localStorage.getItem("token");
+  const socket = io({ auth: { token } });
   const messagesEl = document.getElementById("messages");
+
+  // Presence map for UI (userId -> online boolean)
+  const presence = new Map();
+
+  socket.on("presence", (p) => {
+    // p = { userId, online }
+    presence.set(p.userId, !!p.online);
+    console.log("presence update", p);
+    // TODO: update UI (e.g., show online badge next to user in home)
+  });
+
+  socket.on("presence-list", (arr) => {
+    arr.forEach((id) => presence.set(id, true));
+    console.log("presence list", arr);
+  });
   const btnSend = document.getElementById("btnSend");
   const msgInput = document.getElementById("msgInput");
   const roomTitle = document.getElementById("room-title");

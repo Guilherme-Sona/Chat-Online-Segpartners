@@ -1,0 +1,47 @@
+[
+  {
+    "id": "24b56862-533c-4b98-af89-97882d74dffe",
+    "name": "Test User",
+    "email": "test1@example.com",
+    "sector": "suporte",
+    "passwordHash": "$2b$10$so82shoUONH5urOLOWY34O7IP460t22PaGpVnAukvkwiP/gtEE99u",
+    "admin": false,
+    "token": "ae0d91cb-25d5-4855-b5f9-0621d53a1a83"
+  },
+  {
+    "id": "108f3d50-84cc-439b-a85d-cb69f83ab82d",
+    "name": "Alice",
+    "email": "alice@example.com",
+    "sector": "Sales",
+    "passwordHash": "$2b$10$.yUFp8I/EIFOEFRk42UQvucexLESOZz8wv9gGXVXDmj2S0Hw/1z3y",
+    "admin": false,
+    "token": "b12b62c1-0550-4fd5-a44a-99873c070714"
+  },
+  {
+    "id": "8e2fc16e-57e3-491d-89a8-3d3aeb35f581",
+    "name": "Bob",
+    "email": "bob@example.com",
+    "sector": "Sales",
+    "passwordHash": "$2b$10$a/A43vSlb.zfaKrQ55WxsuUqINbko0X.am6xw0/N5ime6S9Trl1pu",
+    "admin": false,
+    "token": "b893486c-dbbf-4d06-80fc-b49e8e9cec10"
+  },
+  {
+    "id": "4b23a239-a53b-4c62-b08f-4b59ed49a452",
+    "name": "Guilherme Sona",
+    "email": "guisona742121@gmail.com",
+    "sector": "TI",
+    "passwordHash": "$2b$10$UuQTyORBsLnqggmvba5IVuGJX5Blyqv3r0n76ar8to7gzPjWouz8m",
+    "admin": false,
+    "token": "dfb7d832-960a-420d-be6a-0e1f96d76ce6"
+  },
+  {
+    "id": "85633651-d954-4f00-985a-2c439bcc4d7d",
+    "name": "danilo gay",
+    "email": "danilo@seg.com.br",
+    "sector": "TI",
+    "passwordHash": "$2b$10$QqJ8F2DTSoisOA7TfcWZKOnVG73Y9c/dvrC/mZRbovdvMbwytW0zy",
+    "admin": false,
+    "token": "c1ccb9bd-1c45-430d-b169-bdc662bc84ee"
+  }
+]
