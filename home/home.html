@@ -8,10 +8,14 @@
   <body>
     <h2 id="welcome"></h2>
     <div style="display: flex; gap: 8px; align-items: center">
-      <button onclick="window.location.href='../chat/chat.html'">
-        Abrir Chat
-      </button>
+      <button id="open-default-chat">Abrir Meu Setor</button>
       <button onclick="logout()">Sair</button>
+    </div>
+
+    <hr />
+
+    <div id="users-container">
+      <!-- Users grouped by sector will be rendered here -->
     </div>
 
     <script src="home.js"></script>

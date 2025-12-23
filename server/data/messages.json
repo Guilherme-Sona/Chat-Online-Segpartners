@@ -19,6 +19,85 @@
       },
       "text": "FAZ O L",
       "ts": 1766496951133
+    },
+    {
+      "id": "1766497134549-rxcut6",
+      "user": {
+        "name": "Guilherme Sona",
+        "email": "guilherme.sona@segpartners.com.br",
+        "admin": false
+      },
+      "text": "oi",
+      "ts": 1766497134549
+    },
+    {
+      "id": "1766499576999-o3rwfa",
+      "user": {
+        "name": "Guilherme Sona",
+        "email": "guilherme.sona@segpartners.com.br",
+        "admin": false
+      },
+      "text": "FAZ O L COM FORÇA",
+      "ts": 1766499576999
+    },
+    {
+      "id": "1766501348236-tqwemd",
+      "user": {
+        "id": "85633651-d954-4f00-985a-2c439bcc4d7d",
+        "name": "danilo gay",
+        "email": "danilo@seg.com.br",
+        "admin": false
+      },
+      "text": "EU FAÇO O L",
+      "ts": 1766501348236
+    },
+    {
+      "id": "1766501374356-4rp9e8",
+      "user": {
+        "id": "4b23a239-a53b-4c62-b08f-4b59ed49a452",
+        "name": "Guilherme Sona",
+        "email": "guisona742121@gmail.com",
+        "admin": false
+      },
+      "text": "OI",
+      "ts": 1766501374356
+    },
+    {
+      "id": "1766501377421-nsoubi",
+      "user": {
+        "id": "85633651-d954-4f00-985a-2c439bcc4d7d",
+        "name": "danilo gay",
+        "email": "danilo@seg.com.br",
+        "admin": false
+      },
+      "text": "OI",
+      "ts": 1766501377421
+    }
+  ],
+  "Sales": [
+    {
+      "id": "1766500824106-gfxc67",
+      "user": {
+        "id": "108f3d50-84cc-439b-a85d-cb69f83ab82d",
+        "name": "Alice",
+        "email": "alice@example.com",
+        "admin": false
+      },
+      "text": "Olá equipe!",
+      "ts": 1766500824106
+    }
+  ],
+  "dm:108f3d50-84cc-439b-a85d-cb69f83ab82d:8e2fc16e-57e3-491d-89a8-3d3aeb35f581": [
+    {
+      "id": "1766500825126-vmy84j",
+      "user": {
+        "id": "108f3d50-84cc-439b-a85d-cb69f83ab82d",
+        "name": "Alice",
+        "email": "alice@example.com",
+        "admin": false
+      },
+      "text": "Mensagem privada para Bob",
+      "ts": 1766500825126
     }
   ]
 }

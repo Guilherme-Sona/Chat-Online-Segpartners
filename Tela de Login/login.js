@@ -1,30 +1,38 @@
-// Validação de Login
-function login() {
+// Validação de Login (usando API)
+async function login() {
   const email = document.getElementById("email").value.trim();
   const password = document.getElementById("password").value.trim();
 
-  const users = JSON.parse(localStorage.getItem("users")) || [];
-
-  if (users.length === 0) {
-    alert("Nenhum usuário cadastrado. Por favor, registre-se primeiro.");
+  if (!email || !password) {
+    alert("Preencha email e senha.");
     return;
   }
 
-  const user = users.find((u) => u.email === email && u.password === password);
+  try {
+    const resp = await fetch("/api/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
+    const data = await resp.json();
+    if (!resp.ok || !data.ok) {
+      alert("Erro ao logar: " + (data.msg || resp.statusText));
+      return;
+    }
 
-  if (!user) {
-    alert("Usuário ou senha inválidos.");
-    return;
+    localStorage.setItem("isLoggedIn", "true");
+    localStorage.setItem("token", data.token);
+    localStorage.setItem("loggedUser", JSON.stringify(data.user));
+    alert(`Bem-vindo, ${data.user.name}!`);
+    window.location.href = "../home/home.html";
+  } catch (err) {
+    console.error(err);
+    alert("Erro ao conectar com o servidor.");
   }
-
-  localStorage.setItem("isLoggedIn", "true");
-  localStorage.setItem("loggedUser", JSON.stringify(user));
-  alert(`Bem-vindo, ${user.name}!`);
-  window.location.href = "../home/home.html"; // Redireciona para a página do Home
 }
 
-// Registrar novo usuário
-function register() {
+// Registrar novo usuário (usando API)
+async function register() {
   const name = document.getElementById("regName").value.trim();
   const email = document.getElementById("regEmail").value.trim();
   const sector = document.getElementById("regSector").value.trim();
@@ -35,32 +43,38 @@ function register() {
     return;
   }
 
-  const users = JSON.parse(localStorage.getItem("users")) || [];
+  try {
+    const resp = await fetch("/api/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, email, sector, password }),
+    });
+    const data = await resp.json();
+    if (!resp.ok || !data.ok) {
+      alert("Erro ao registrar: " + (data.msg || resp.statusText));
+      return;
+    }
 
-  if (users.some((u) => u.email === email)) {
-    alert("Usuário já existe");
-    return;
+    // Save token and user
+    localStorage.setItem("isLoggedIn", "true");
+    localStorage.setItem("token", data.token);
+    localStorage.setItem("loggedUser", JSON.stringify(data.user));
+
+    alert("Usuário registrado e logado com sucesso!");
+    document.getElementById("registerModal").style.display = "none";
+
+    // Limpar campos
+    document.getElementById("regName").value = "";
+    document.getElementById("regEmail").value = "";
+    document.getElementById("regSector").value = "";
+    document.getElementById("regPassword").value = "";
+
+    // Redireciona para Home (onde estará o acesso ao chat)
+    window.location.href = "../home/home.html";
+  } catch (err) {
+    console.error(err);
+    alert("Erro ao conectar com o servidor.");
   }
-
-  const newUser = { name, email, password, sector, admin: false };
-  users.push(newUser);
-  localStorage.setItem("users", JSON.stringify(users));
-
-  // Auto-login após registro para facilitar testes
-  localStorage.setItem("isLoggedIn", "true");
-  localStorage.setItem("loggedUser", JSON.stringify(newUser));
-
-  alert("Usuário registrado e logado com sucesso!");
-  document.getElementById("registerModal").style.display = "none";
-
-  // Limpar campos
-  document.getElementById("regName").value = "";
-  document.getElementById("regEmail").value = "";
-  document.getElementById("regSector").value = "";
-  document.getElementById("regPassword").value = "";
-
-  // Redireciona para Home (onde estará o acesso ao chat)
-  window.location.href = "../home/home.html";
 }
 
 // Listeners para abrir/fechar o modal e para o botão registrar
